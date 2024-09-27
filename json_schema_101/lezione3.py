@@ -10,10 +10,15 @@ schema = {
     },
 }
 
-# If no exception is raised by validate(), the instance is valid.
-validate(instance={"name" : "Eggs", "price" : 34.99}, schema=schema)
+def test_jsonSchemaSuccess():
+    assert validate(instance={"name" : "Eggs", "price" : 34.99}, schema=schema) == None
 
-
-validate(
-    instance={"name" : "Eggs", "price" : 34}, schema=schema,
-)                                   
+def test_jsonFail():
+    failed = None
+    try:
+        validate(instance={"name" : "Eggs", "price" : "Invalid"}, schema=schema)
+        failed = False
+    except:
+        failed = True
+    
+    assert failed == True

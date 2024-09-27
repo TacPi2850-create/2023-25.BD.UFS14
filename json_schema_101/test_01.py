@@ -26,6 +26,6 @@ def test_validate_fail():
 def validate_wrapper(instance, schema):
     try:
         validate(instance = schema, schema = schema)
-        return True #None -> True
+        return True #None -> False
     except:
         return False #errore -> False

@@ -1,0 +1,16 @@
+export AZURE_RESOURCE_GROUP=`az group list | jq -r ".[].name"`
+echo "Il tuo AZURE_RESOURCE_GROUP e' il seguente ${AZURE_RESOURCE_GROUP}"
+
+export COGNOME=tacunan
+echo "Il tuo COGNOME e' il seguente ${COGNOME}"
+
+export AZURE_FUNCTION_STORAGE_ACCOUNT_NAME=storage202325bd$COGNOME
+echo "Il tuo AZURE_FUNCTION_STORAGE_ACCOUNT_NAME e' il seguente ${AZURE_FUNCTION_STORAGE_ACCOUNT_NAME}"
+
+export AZURE_FUNCTION_APP_NAME=func-app-2023-25-bd-$COGNOME
+echo "Il tuo AZURE_FUNCTION_APP_NAME e' il seguente ${AZURE_FUNCTION_APP_NAME}"
+
+az storage account create --name $AZURE_FUNCTION_STORAGE_ACCOUNT_NAME --location westeurope --resource-group $AZURE_RESOURCE_GROUP --sku Standard_LRS
+
+
+az functionapp create --resource-group $AZURE_RESOURCE_GROUP --consumption-plan-location westeurope --runtime python --runtime-version 3.10 --functions-version 4 --name $AZURE_FUNCTION_APP_NAME --os-type linux --storage-account $AZURE_FUNCTION_STORAGE_ACCOUNT_NAME

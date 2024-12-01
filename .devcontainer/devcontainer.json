@@ -8,7 +8,8 @@
 		"ghcr.io/devcontainers/features/python:1": {
 			"installTools": true,
 			"version": "3.12"
-		}
+		},
+		"ghcr.io/devcontainers/features/azure-cli:1": {}
 	},
 	"customizations": {
 		"vscode": {
@@ -18,7 +19,8 @@
 				"eamodio.gitlens"
 			]
 		}
-	}
+	
+}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

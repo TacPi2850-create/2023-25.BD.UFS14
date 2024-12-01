@@ -8,12 +8,12 @@ def get_question():
     response = requests.get(url)
     data = response.json()['results'][0]
    
-    # Clean up the data (remove HTML entities)
+    
     question = html.unescape(data['question'])
     correct = html.unescape(data['correct_answer'])
     incorrect = [html.unescape(a) for a in data['incorrect_answers']]
    
-    # Mix up the answers
+
     all_answers = [correct] + incorrect
     random.shuffle(all_answers)
    
@@ -22,15 +22,15 @@ def get_question():
 def play_trivia():
     score = 0
     while True:
-        # Get and show the question
+        
         question, answers, correct = get_question()
         print(f"\nQuestion: {question}")
        
-        # Show answers
+        
         for i, answer in enumerate(answers, 1):
             print(f"{i}. {answer}")
            
-        # Get player's answer
+        
         try:
             choice = int(input("\nYour answer (or 0 to quit): "))
             if choice == 0:
@@ -39,7 +39,7 @@ def play_trivia():
                 print("Invalid choice!")
                 continue
                
-            # Check if correct
+            
             if answers[choice-1] == correct:
                 print("Correct!")
                 score += 1

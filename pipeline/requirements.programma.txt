@@ -1,5 +1,4 @@
 requests==2.32.3
 pytest-snapshot==0.9.0
-unittest==0.0
 jsonschema==4.23.0
 

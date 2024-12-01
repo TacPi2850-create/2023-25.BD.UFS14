@@ -1,7 +1,6 @@
 import pytest
-import json
-from unittest.mock import patch, MagicMock
 import jsonschema
+import requests
 from trivia_game import get_question, play_trivia
 
 # JSON Schema for the trivia API response
@@ -56,71 +55,49 @@ def test_schema_validation():
     jsonschema.validate(instance=SAMPLE_RESPONSE, schema=TRIVIA_SCHEMA)
 
 @pytest.fixture
-def mock_api_response():
+def mock_requests(mocker):
     """Fixture to provide a mock API response"""
-    with patch('requests.get') as mock_get:
-        mock_response = MagicMock()
-        mock_response.json.return_value = SAMPLE_RESPONSE
-        mock_get.return_value = mock_response
-        yield mock_get
+    mock = mocker.patch('requests.get')
+    mock.return_value.json.return_value = SAMPLE_RESPONSE
+    return mock
 
-def test_get_question(mock_api_response, snapshot):
-    """Test the get_question function and compare with snapshot"""
+def test_get_question(mock_requests):
+    """Test the get_question function returns expected format"""
     question, answers, correct = get_question()
    
-    # Create a snapshot-friendly format
-    result = {
-        'question': question,
-        'answers_length': len(answers),
-        'correct_answer': correct
-    }
-   
-    # Compare with snapshot
-    assert result == snapshot
+    assert question == SAMPLE_RESPONSE['results'][0]['question']
+    assert len(answers) == 4  # All answers (1 correct + 3 incorrect)
+    assert correct == SAMPLE_RESPONSE['results'][0]['correct_answer']
+    assert all(isinstance(answer, str) for answer in answers)
 
-@pytest.mark.parametrize("input_sequence,expected_score", [
-    (["1", "0"], 1),  # Correct answer then quit
-    (["2", "0"], 0),  # Wrong answer then quit
-    (["invalid", "1", "0"], 1),  # Invalid input, then correct, then quit
+@pytest.mark.parametrize("user_inputs,expected_score", [
+    (["1", "0"], 1),           # Correct answer then quit
+    (["2", "0"], 0),           # Wrong answer then quit
+    (["invalid", "1", "0"], 1) # Invalid input, correct answer, quit
 ])
-def test_play_trivia(mock_api_response, monkeypatch, input_sequence):
+def test_play_trivia(mock_requests, mocker, user_inputs, expected_score):
     """Test the play_trivia function with different input sequences"""
-    # Mock the input function
-    inputs = iter(input_sequence)
-    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+    # Mock input() to return our test inputs
+    inputs = iter(user_inputs)
+    mocker.patch('builtins.input', lambda _: next(inputs))
    
-    # Mock print to capture output
-    printed_messages = []
-    monkeypatch.setattr('builtins.print', lambda *args: printed_messages.append(' '.join(map(str, args))))
+    # Mock print() to capture output
+    printed = []
+    mocker.patch('builtins.print', lambda *args: printed.append(' '.join(map(str, args))))
    
-    # Run the game
+    # Run game
     play_trivia()
    
-    # Check if score was printed correctly
-    score_messages = [msg for msg in printed_messages if msg.startswith('Score:')]
-    if score_messages:
-        final_score = int(score_messages[-1].split(': ')[1])
-        assert final_score == expected_score
+    # Check final score
+    score_messages = [msg for msg in printed if msg.startswith('Score:')]
+    assert score_messages, "No score was printed"
+    final_score = int(score_messages[-1].split(': ')[1])
+    assert final_score == expected_score
 
-def test_error_handling(mock_api_response):
-    """Test error handling in get_question"""
-    # Mock an API error
-    mock_api_response.side_effect = Exception("API Error")
+def test_api_error(mocker):
+    """Test error handling when API request fails"""
+    mock_get = mocker.patch('requests.get')
+    mock_get.side_effect = requests.RequestException("API Error")
    
-    with pytest.raises(Exception):
+    with pytest.raises(requests.RequestException):
         get_question()
-
-# Create snapshots/conftest.py
-@pytest.fixture
-def snapshot(snapshot_session):
-    """Fixture for snapshot testing"""
-    return snapshot_session
-
-# Example snapshot (snapshots/snap_test_trivia.py)
-snapshots = {
-    'test_get_question': {
-        'question': 'What is the atomic number of Carbon?',
-        'answers_length': 4,
-        'correct_answer': '6'
-    }
-}

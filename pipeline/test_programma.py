@@ -42,10 +42,21 @@ def test_schema_validation():
 
 def test_question_format(snapshot):
     snapshot.snapshot_dir='snapshots'
-    result = {
-        'question': "Which retro video game was released first?",
-        'num_answers': 4,
-        'correct_answer': "Space Invaders"
+    schema = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "question": {
+            "type": "string"
+        },
+        "num_answers": {
+            "type": "integer"
+        },
+        "correct_answer": {
+            "type": "string"
+        }
+    },
+    "required": ["question", "num_answers", "correct_answer"]
     }
    
-    snapshot.assert_match(result, 'risposte.txt')
+    snapshot.assert_match(schema, 'risposte.txt')

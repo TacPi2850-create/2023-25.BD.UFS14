@@ -4,6 +4,7 @@ import jsonschema
 import pytest
 import html
 import random
+from trivia_game import get_question
 
 QUESTION_SCHEMA = {
     "type": "object",

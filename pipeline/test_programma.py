@@ -1,62 +1,35 @@
-import pytest
+import json
+import requests
 import jsonschema
-from trivia_game import get_question
+import pytest
+import html
+import random
 
-# JSON Schema for validating trivia API response
-TRIVIA_SCHEMA = {
+QUESTION_SCHEMA = {
     "type": "object",
     "properties": {
-        "response_code": {"type": "integer"},
-        "results": {
+        "question": {"type": "string"},
+        "num_answers": {"type": "integer", "minimum": 2},
+        "correct_answer": {"type": "string"},
+        "all_answers": {
             "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "question": {"type": "string"},
-                    "correct_answer": {"type": "string"},
-                    "incorrect_answers": {
-                        "type": "array",
-                        "items": {"type": "string"}
-                    }
-                },
-                "required": ["question", "correct_answer", "incorrect_answers"]
-            }
+            "items": {"type": "string"},
+            "minItems": 2
         }
     },
-    "required": ["response_code", "results"]
+    "required": ["question", "num_answers", "correct_answer", "all_answers"]
 }
 
-# Sample response for testing
-SAMPLE_RESPONSE = {
-    "response_code": 0,
-    "results": [{
-        "question": "Which retro video game was released first?",
-        "correct_answer": "Space Invaders",
-        "incorrect_answers": ["Pac-Man", "Donkey Kong", "Frogger"]
-    }]
-}
-
-def test_schema_validation():
-    """Validate that our sample response matches the schema"""
-    jsonschema.validate(instance=SAMPLE_RESPONSE, schema=TRIVIA_SCHEMA)
+def test_question_schema():
+    """Test that the question meets the JSON schema."""
+    question_data = get_question()
+    jsonschema.validate(instance=question_data, schema=QUESTION_SCHEMA)
 
 def test_question_format(snapshot):
-    snapshot.snapshot_dir='snapshots'
-    schema = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "type": "object",
-    "properties": {
-        "question": {
-            "type": "string"
-        },
-        "num_answers": {
-            "type": "integer"
-        },
-        "correct_answer": {
-            "type": "string"
-        }
-    },
-    "required": ["question", "num_answers", "correct_answer"]
-    }
-   
-    snapshot.assert_match(schema, 'risposte.txt')
+    """Snapshot test for question format."""
+    question_data = get_question()
+    snapshot.assert_match({
+        'question': question_data['question'],
+        'num_answers': question_data['num_answers'],
+        'correct_answer': question_data['correct_answer']
+    })
